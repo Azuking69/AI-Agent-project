@@ -1,0 +1,47 @@
+# ✅ 파이썬 실행 시 자동 생성되는 캐시 및 빌드 파일 무시
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.so
+*.egg-info/
+*.log
+
+# ✅ 가상환경 디렉토리 무시 (venv 등)
+.venv/
+.env
+env/
+venv/
+ENV/
+
+# ✅ Jupyter Notebook 체크포인트 파일 무시
+.ipynb_checkpoints/
+
+# ✅ VSCode 개인 설정 파일 무시
+.vscode/
+
+# ✅ 출력 데이터, 모델 파일 등 무시 (필요시 주석 해제)
+outputs/
+*.h5
+*.pt
+*.pth
+*.onnx
+*.joblib
+*.pkl
+*.npy
+*.npz
+
+# ✅ 오디오 파일 무시 (필요시 주석 해제)
+# *.wav
+# *.mp3
+
+# ✅ 이미지 파일 무시 (필요시 주석 해제)
+# *.png
+# *.jpg
+
+# ✅ 운영체제가 자동 생성하는 숨김 파일 무시
+.DS_Store
+Thumbs.db
+
+#Ignore vscode AI rules
+.github\instructions\codacy.instructions.md
