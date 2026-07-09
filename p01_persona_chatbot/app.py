@@ -58,3 +58,44 @@ PERSONAS = {
         ),
     },
 }
+
+
+# Make Chat UI (Flask + SSE)
+# 첫 화면
+@app.route("/")
+def index():
+    # Correct Persona
+    return render_template("index.html", personas=PERSONAS)
+
+# Chatting with Persona API
+# SSE(Server-Sent Events)로 답변을 실시간 Token단위로 Browser에서 전송
+@app.route("/chat", methods=["POST"])
+def chat():
+    data = request.json
+    persona_id = data["persona"]
+    user_message = data["message"]
+    session_id = data.get("session_id", "default")
+
+    # Persona별로 대화 저장
+    conv_key = f"{session_id}_{persona_id}"
+    if conv_key not in conversations:
+        conversations[conv_key] = []
+
+    # Add user message to conversation
+    history = conversations[conv_key]
+    history.append({"role": "user", "content": user_message})
+
+    # Get the selected persona
+    persona = PERSONAS[persona_id]
+
+    # 
+    def generate():
+        with client.messages.stream(
+            model=MODEL,
+            # Use persona place
+            system=persona["system"],
+            messsages=history,
+        ) as stream:
+            for text in stream.text_stream:
+                # SSE의 Token 단위로 Browser에 전송
+                yield f"data: {json.dumps({'text': text})}\n\n"
