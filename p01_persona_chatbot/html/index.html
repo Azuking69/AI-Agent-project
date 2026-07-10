@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Persona Chatbot</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="chat-container">
+      <!-- Chat Header -->
+      <header>
+        <h1>Persona Chatbot</h1>
+        <p class="subtitle">Select a persona to start chatting!</p>
+      </header>
+
+      <!-- Persona Selector -->
+      <div class="persona-selector">
+        {% for id, persona in personas.items() %}
+        <button
+          class="persona-btn"
+          data-persona-id="{{ id }}"
+          onclick="selectPersona('{{ id }}')"
+        >
+          <strong>{{ persona.name }}</strong>
+          <span>{{ persona.description }}</span>
+        </button>
+        {% endfor %}
+      </div>
+
+      <!-- Area where conversations build up -->
+      <div class="chat-area" id="chat-area">
+        <div id="messages" class="messages">
+          <div class="message bot-message">
+            Welcome! Please select a persona to start chatting.
+          </div>
+        </div>
+      </div>
+
+      <!-- User Input -->
+      <div class="chat-input">
+        <input
+          type="text"
+          id="user-input"
+          placeholder="Input your message..."
+          disabled
+          onkeydown="if (event.key === 'Enter') sendMessage();"
+        />
+        <button id="send-btn" onclick="sendMessage()" disabled>Send</button>
+        <button id="reset-btn" onclick="resetChat()">Reset</button>
+      </div>
+
+      <!-- Display used tokens -->
+      <div id="token-info" class="token-info"></div>
+    </div>
+
+    <!-- JavaScript -->
+    <script>
+      // Global variables
+      let personaId = null;
+      const sessionId = crypto.randomUUID();
+
+      function selectPersona(personaId) {
+        currentPersonaId = personaId;
+
+        // Display the selected persona button as active
+        document.querySelectorAll(".persona-btn").forEach((btn) => {
+          btn.classList.remove("active", btn.dataset.personaId === personaId);
+        });
+
+        // Only enable the input and send button if a persona is selected
+        document.getElementById("user-input").disabled = false;
+        document.getElementById("send-btn").disabled = false;
+        document.getElementById("reset-btn").disabled = false;
+
+        // If changed persona, reset the chat area
+        resetChat();
+
+        const messages = document.getElementById("messages");
+        messages.innerHTML = `<div class="system-msg">
+              <strong>${personaId}</strong>. Start chatting!
+          </div>`;
+
+        document.getElementById("user-input").focus();
+
+        async function sendMessage() {
+          const input = document.getElementById("user-input");
+          const message = input.value.trim();
+          if (!message || !personaId) return;
+
+          // Display user message
+          appendMessage("user", message);
+          input.value = "";
+          input.disabled = true;
+          document.getElementById("send-btn").disabled = true;
+
+          // Pre-create AI response compartments to be filled with streaming
+          const assistantDiv = appendMessage("assistant", "");
+
+          try {
+            // Read SSE streaming from the server, realtime display
+            const response = await fetch("/chat", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                persona: currentPersonaId,
+                session_id: sessionId,
+                message: message,
+              }),
+            });
+
+            // Check if the response is ok
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder();
+            let buffer = "";
+
+            while (true) {
+              // Read the stream
+              const { done, value } = await reader.read();
+              if (done) break;
+
+              // Decode the chunk and append to buffer
+              buffer += decoder.decode(value, { stream: true });
+
+              // Process each line of the SSE stream
+              const lines = buffer.split("\n");
+              buffer = lines.pop(); // Keep the last incomplete line in the buffer
+
+              // Process each line of the SSE stream
+              for (const line of lines) {
+                if (!line.startsWith("data:")) continue;
+                const data = JSON.parse(line.slice(6));
+
+                // Update the AI message div with the new text
+                if (data.text) {
+                  assistantDiv.querySelector(".text").textContent += data.text;
+                  scrollToBottom();
+                }
+                // Update the token info if the response is done
+                if (data.done) {
+                  document.getElementById("token-info").textContent =
+                    `Used tokens - Input: ${data.used_tokens} / Output: ${data.output_tokens}`;
+                  input.focus();
+                }
+              }
+            }
+
+            // Handle any remaining buffer after the stream ends
+          } catch (error) {
+            assistantDiv.querySelector(".text").textContent +=
+              "\n[Error receiving response]";
+          }
+
+          // Re-enable the input and send button after the response is complete
+          input.disabled = false;
+          document.getElementById("send-btn").disabled = false;
+          input.focus();
+        }
+      }
+
+      // Append a new message to the chat
+      function appendMessage(role, text) {
+        const messages = document.getElementById("messages");
+        const div = document.createElement("div");
+        // Add appropriate classes for styling based on the sender
+        div.className = `message ${role}`;
+        div.innerHTML = `
+          <span class="role">${role === "user" ? "I" : "AI"}</span>
+          <span class="text">${text}</span>
+          `;
+        messages.appendChild(div);
+        scrollToBottom();
+        return div;
+      }
+
+      // Scroll the chat area to the bottom to show the latest message
+      function scrollToBottom() {
+        const chatArea = document.getElementById("chat-area");
+        chatArea.scrollTop = chatArea.scrollHeight;
+      }
+
+      async function resetChat() {
+        if (!personaId) return;
+        (await fetch("/reset", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ persona: personaId, session_id: sessionId }),
+        }),
+          (document.getElementById("token-info").textContent = ""));
+      }
+    </script>
+  </body>
+</html>
