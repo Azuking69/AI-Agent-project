@@ -4,11 +4,14 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Persona Chatbot</title>
+    <!-- Flask使用時のCSSリンク -->
     <link
       rel="stylesheet"
       href="{{ url_for('static', filename='style.css') }}"
     />
   </head>
+  <!-- Markdown処理用のスクリプト -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/9.1.6/marked.min.js"></script>
   <body>
     <div class="chat-container">
       <!-- Chat Header -->
@@ -150,7 +153,12 @@
 
               // AI メッセージ div を新しいテキストで更新
               if (data.text) {
-                assistantDiv.querySelector(".text").textContent += data.text;
+                // Markdownをパースして表示
+                const textSpan = assistantDiv.querySelector(".text");
+                // データを蓄積して、Markdownをパース
+                textSpan.dataset.raw = (textSpan.dataset.raw || "") + data.text;
+                // MarkdownをHTMLに変換して表示
+                textSpan.innerHTML = marked.parse(textSpan.dataset.raw);
                 // チャット領域を下までスクロールして、最新のメッセージを表示
                 scrollToBottom();
               }
