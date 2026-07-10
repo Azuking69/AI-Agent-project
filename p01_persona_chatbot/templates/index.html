@@ -89,10 +89,6 @@
         resetChat();
 
         const messages = document.getElementById("messages");
-        messages.innerHTML = `<div class="system-msg">
-              <strong>${id}</strong>. Start chatting!
-          </div>`;
-
         document.getElementById("user-input").focus();
       }
 
@@ -222,13 +218,8 @@
           }),
         });
         // チャット領域をクリアして、トークン情報もリセット
-        const messages = document.getElementById("chat-area");
-        document.getElementById("token-info").textContent = "";
-        messages.innerHTML = (
-          <p>
-            <strong>${currentPersonaId}</strong> Start chatting!
-          </p>
-        );
+        const messages = document.getElementById("messages");
+        messages.innerHTML = `<div class="system-msg"><strong>${currentPersonaId}</strong> Start chatting!</div>`;
       }
     </script>
   </body>
