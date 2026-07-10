@@ -28,7 +28,7 @@
         {% endfor %}
       </div>
 
-      <!-- Area where conversations build up -->
+      <!-- ペルソナが積まれる領域 -->
       <div class="chat-area" id="chat-area">
         <div id="messages" class="messages">
           <div class="message bot-message">
@@ -56,24 +56,30 @@
 
     <!-- JavaScript -->
     <script>
-      // Global variables
+      // Global変数
       let currentPersonaId = null;
+      // crypto.randomUUID(): ブラウザでUUIDを生成するためのメソッド。
+      //                      セッションごとに一意のIDを生成するために使用される。
       const sessionId = crypto.randomUUID();
 
       function selectPersona(id) {
         currentPersonaId = id;
 
-        // Display the selected persona button as active
+        // 選択したペルソナのボタンを表示する
         document.querySelectorAll(".persona-btn").forEach((btn) => {
-          btn.classList.remove("active", btn.dataset.personaId === id);
+          btn.classList.remove("active");
+          if (btn.dataset.personaId === id) {
+            // 選択したペルソナのボタンに "active" クラスを追加
+            btn.classList.add("active");
+          }
         });
 
-        // Only enable the input and send button if a persona is selected
+        // ペルソナが選択されている場合のみ、入力と送信ボタンを有効
         document.getElementById("user-input").disabled = false;
         document.getElementById("send-btn").disabled = false;
         document.getElementById("reset-btn").disabled = false;
 
-        // If changed persona, reset the chat area
+        // ペルソナが変更された場合は、チャット領域をリセット
         resetChat();
 
         const messages = document.getElementById("messages");
@@ -94,11 +100,11 @@
         input.disabled = true;
         document.getElementById("send-btn").disabled = true;
 
-        // Pre-create AI response compartments to be filled with streaming
+        // ストリーミングでAIの応答を受け取るための非同期関数
         const assistantDiv = appendMessage("assistant", "");
 
         try {
-          // Read SSE streaming from the server, realtime display
+          // サーバーからの応答をストリーミングで受け取るためのfetchリクエスト
           const response = await fetch("/chat", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -124,19 +130,19 @@
 
             // Process each line of the SSE stream
             const lines = buffer.split("\n");
-            buffer = lines.pop(); // Keep the last incomplete line in the buffer
+            buffer = lines.pop(); // まだ完全に受信していない行をバッファに残す
 
             // Process each line of the SSE stream
             for (const line of lines) {
               if (!line.startsWith("data:")) continue;
               const data = JSON.parse(line.slice(6));
 
-              // Update the AI message div with the new text
+              // AI メッセージ div を新しいテキストで更新
               if (data.text) {
                 assistantDiv.querySelector(".text").textContent += data.text;
                 scrollToBottom();
               }
-              // Update the token info if the response is done
+              // 応答が行われた場合は、トークン情報を更新
               if (data.done) {
                 document.getElementById("token-info").textContent =
                   `Used tokens - Input: ${data.used_tokens} / Output: ${data.output_tokens}`;
@@ -145,23 +151,23 @@
             }
           }
 
-          // Handle any remaining buffer after the stream ends
+          // ストリーム終了後に残りのバッファを処理
         } catch (error) {
           assistantDiv.querySelector(".text").textContent +=
             "\n[Error receiving response]";
         }
 
-        // Re-enable the input and send button after the response is complete
+        // 応答が完了したら、入力および送信ボタンを再度有効
         input.disabled = false;
         document.getElementById("send-btn").disabled = false;
         input.focus();
       }
 
-      // Append a new message to the chat
+      // チャットに新しいメッセージを追加
       function appendMessage(role, text) {
         const messages = document.getElementById("messages");
         const div = document.createElement("div");
-        // Add appropriate classes for styling based on the sender
+        // 送信者に基づいて適切なクラスを追加
         div.className = `message ${role}`;
         div.innerHTML = `
           <span class="role">${role === "user" ? "I" : "AI"}</span>
@@ -172,23 +178,24 @@
         return div;
       }
 
-      // Scroll the chat area to the bottom to show the latest message
+      // チャット領域を下までスクロールして、最新のメッセージを表示
       function scrollToBottom() {
         const chatArea = document.getElementById("chat-area");
         chatArea.scrollTop = chatArea.scrollHeight;
       }
 
+      // チャットをリセットする関数
       async function resetChat() {
         if (!currentPersonaId) return;
-        (await fetch("/reset", {
+        await fetch("/reset", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             persona: currentPersonaId,
             session_id: sessionId,
           }),
-        }),
-          (document.getElementById("token-info").textContent = ""));
+        });
+        document.getElementById("token-info").textContent = "";
       }
     </script>
   </body>
