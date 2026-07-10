@@ -68,6 +68,7 @@ def index():
     # Correct Persona
     return render_template("index.html", personas=PERSONAS)
 
+
 # Chatting with Persona API
 # SSE(Server-Sent Events)で回答をリアルタイムにToken単位でBrowserから送信
 
@@ -120,6 +121,18 @@ def chat():
         stream_with_context(generate()),
         content_type="text/event-stream",
     )
+
+# Make reset route to clear conversation history
+@app.route("/reset", methods=["POST"])
+def reset():
+    data = request.json
+    session_id = data.get("session_id", "default")
+    persona_id = data.get("persona", "")
+    # 会話履歴を削除するためのキーを作成
+    conv_key = f"{session_id}_{persona_id}"
+    conversations.pop(conv_key, None)  # 会話履歴を削除
+    # SSEでBrowserに送信するためのResponseを返す
+    return {"status": "success"}
 
 if __name__ == "__main__":
     app.run(debug=True, port=5000)
