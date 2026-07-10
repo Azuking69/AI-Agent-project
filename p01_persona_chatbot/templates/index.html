@@ -68,7 +68,7 @@
       //                      セッションごとに一意のIDを生成するために使用される。
       const sessionId = crypto.randomUUID();
 
-      function selectPersona(id) {
+      async function selectPersona(id) {
         currentPersonaId = id;
 
         // 選択したペルソナのボタンを表示する
@@ -86,13 +86,7 @@
         document.getElementById("reset-btn").disabled = false;
 
         // ペルソナが変更された場合は、チャット領域をリセット
-        resetChat();
-
-        const messages = document.getElementById("messages");
-        messages.innerHTML = `<div class="system-msg">
-              <strong>${id}</strong>. Start chatting!
-          </div>`;
-
+        await resetChat();
         document.getElementById("user-input").focus();
       }
 
@@ -221,7 +215,9 @@
             session_id: sessionId,
           }),
         });
-        document.getElementById("token-info").textContent = "";
+        // チャット領域をクリアして、トークン情報もリセット
+        const messages = document.getElementById("messages");
+        messages.innerHTML = `<div class="system-msg"><strong>${currentPersonaId}</strong> Start chatting!</div>`;
       }
     </script>
   </body>
