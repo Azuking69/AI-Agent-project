@@ -68,7 +68,7 @@
       //                      セッションごとに一意のIDを生成するために使用される。
       const sessionId = crypto.randomUUID();
 
-      function selectPersona(id) {
+      async function selectPersona(id) {
         currentPersonaId = id;
 
         // 選択したペルソナのボタンを表示する
@@ -86,9 +86,7 @@
         document.getElementById("reset-btn").disabled = false;
 
         // ペルソナが変更された場合は、チャット領域をリセット
-        resetChat();
-
-        const messages = document.getElementById("messages");
+        await resetChat();
         document.getElementById("user-input").focus();
       }
 
