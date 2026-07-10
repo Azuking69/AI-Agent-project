@@ -402,3 +402,37 @@ input:disabled {
     font-size: 0.9rem;
   }
 }
+
+/* Setting Markdown styles */
+.message .text h1,
+.message .text h2,
+.message .text h3 {
+  font-size: 1rem;
+  font-weight: bold;
+  margin: 4px 0;
+}
+
+.message .text p {
+  margin: 4px 0;
+}
+
+.message .text ul,
+.message .text ol {
+  margin: 4px 0;
+  padding-left: 20px;
+}
+
+.message .text code {
+  background: rgba(0, 0, 0, 0.1);
+  padding: 2px 4px;
+  border-radius: 4px;
+  font-size: 0.85rem;
+}
+
+.message .text pre {
+  background: rgba(0, 0, 0, 0.1);
+  padding: 8px;
+  border-radius: 8px;
+  overflow-x: auto;
+  font-size: 0.85rem;
+}
