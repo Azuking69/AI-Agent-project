@@ -34,7 +34,7 @@ master
 - `POST /chat` : SSE 스트리밍 응답 전송
 - 페르소나별 대화 히스토리 분리 관리
 
-### 🔲 feature/fix_and_frontend
+### 🔲 feature/frontend
 
 **작업 내용:**
 

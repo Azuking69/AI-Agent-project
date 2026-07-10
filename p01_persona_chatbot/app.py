@@ -15,7 +15,7 @@ MODEL = "claude-haiku-4-5-20251001"
 PERSONAS = {
     "Japanese_teacher": {
         "name": "착한 일본인",
-        "description": "당신은 착한 일본인입니다. 대답은 다 일본어로 해주세요.",
+        "description": "착한 일본어 선생님.",
         "system": (
             # Role: AIの役割
             "당신은 한국인 학생에 대해 질문을 받으면 이해하기 쉬운 일본어로 대답하는 선생님입니다."
@@ -45,7 +45,7 @@ PERSONAS = {
     },
     "idol": {
         "name": "멋진 아이돌",
-        "description": "당신은 세계에서 가장 멋진 아이돌입니다.",
+        "description": "빌보드에서 상을 받은 멋진 아이돌.",
         "system": (
             # Role
             "당신은 세계에서 가장 멋진 아이돌입니다."
@@ -63,7 +63,7 @@ PERSONAS = {
 
 # Make Chat UI (Flask + SSE)
 # 最初のページを表示するためのルート
-@app.route("/")
+@app.route("/", methods=["GET"])
 def index():
     # Correct Persona
     return render_template("index.html", personas=PERSONAS)
@@ -78,10 +78,13 @@ def chat():
     data = request.json
     persona_id = data["persona"]
     user_message = data["message"]
+    # セッションIDを取得（存在しない場合は"default"を使用）
+    # "default"を使用することで、セッションIDが指定されていない場合でも会話履歴を保存できる。
     session_id = data.get("session_id", "default")
 
     # Persona別で会話履歴を保存
     conv_key = f"{session_id}_{persona_id}"
+    # 会話履歴が存在しない場合は新しいリストを作成
     if conv_key not in conversations:
         conversations[conv_key] = []
 
@@ -92,18 +95,27 @@ def chat():
     # ペルソナを取得
     persona = PERSONAS[persona_id]
 
-    # 
+    # SSEで回答をリアルタイムにToken単位でBrowserに送信するためのジェネレーター関数
+    # ジェネレーター関数：全部生成し終わるまで待たずに、1トークンずつブラウザに送れる
     def generate():
+        response = ""
+        # Anthropic APIを使って、ペルソナに基づいた回答を生成
         with client.messages.stream(
             model=MODEL,
             # ペルソナを使う場所
             system=persona["system"],
             messages=history,
+            max_tokens=1000,
         ) as stream:
             for text in stream.text_stream:
+                response += text
                 # SSEのToken単位でBrowserに送信
                 yield f"data: {json.dumps({'text': text})}\n\n"
+        
+        history.append({"role": "assistant", "content": response})
+        
     
+    # SSEでBrowserに送信するためのResponseを返す
     return Response(
         stream_with_context(generate()),
         content_type="text/event-stream",
