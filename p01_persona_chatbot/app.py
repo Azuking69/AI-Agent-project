@@ -113,7 +113,7 @@ def chat():
                 yield f"data: {json.dumps({'text': text})}\n\n"
         
         history.append({"role": "assistant", "content": response})
-        yield f"event: done\ndata: {json.dumps({'text': 'done'})}\n\n"
+        
     
     # SSEでBrowserに送信するためのResponseを返す
     return Response(
