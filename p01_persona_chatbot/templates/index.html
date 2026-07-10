@@ -92,6 +92,8 @@
 
         document.getElementById("user-input").focus();
       }
+
+      // ユーザーのメッセージを送信
       async function sendMessage() {
         const input = document.getElementById("user-input");
         const message = input.value.trim();
@@ -101,6 +103,7 @@
         appendMessage("user", message);
         input.value = "";
         input.disabled = true;
+        // 送信ボタンを無効化して、ユーザーが連続で送信できないようにする
         document.getElementById("send-btn").disabled = true;
 
         // ストリーミングでAIの応答を受け取るための非同期関数
@@ -118,31 +121,37 @@
             }),
           });
 
-          // Check if the response is ok
+          // SSEのストリームを読み取るためのリーダーを作成
+          // reader: ストリームを読み取るためのオブジェクト。fetchのレスポンスから取得。
           const reader = response.body.getReader();
           const decoder = new TextDecoder();
           let buffer = "";
 
           while (true) {
-            // Read the stream
+            // Read from the stream
             const { done, value } = await reader.read();
+            // ストリーミングが終了した場合はループを抜ける
             if (done) break;
 
-            // Decode the chunk and append to buffer
+            // バッファにデコードしたテキストを追加
+            // vakue: Uint8Array形式のデータ。TextDecoderを使って文字列に変換する。
             buffer += decoder.decode(value, { stream: true });
 
-            // Process each line of the SSE stream
+            // SSEのストリームは改行で区切られているため、改行で分割して処理する
             const lines = buffer.split("\n");
             buffer = lines.pop(); // まだ完全に受信していない行をバッファに残す
 
-            // Process each line of the SSE stream
+            // SSEの各行を処理
             for (const line of lines) {
+              // SSEのデータ行は "data:" で始まるため、それ以外の行は無視する
               if (!line.startsWith("data:")) continue;
+              // SSEのデータ行からJSONをパースして、AIの応答を取得
               const data = JSON.parse(line.slice(6));
 
               // AI メッセージ div を新しいテキストで更新
               if (data.text) {
                 assistantDiv.querySelector(".text").textContent += data.text;
+                // チャット領域を下までスクロールして、最新のメッセージを表示
                 scrollToBottom();
               }
               // 応答が行われた場合は、トークン情報を更新
@@ -156,13 +165,16 @@
 
           // ストリーム終了後に残りのバッファを処理
         } catch (error) {
+          // エラーが発生した場合は、AIメッセージにエラーメッセージを表示
           assistantDiv.querySelector(".text").textContent +=
             "\n[Error receiving response]";
         }
 
         // 応答が完了したら、入力および送信ボタンを再度有効
         input.disabled = false;
+        // 送信ボタンを有効化して、ユーザーが再度送信できるようにする
         document.getElementById("send-btn").disabled = false;
+        // 入力フィールドにフォーカスを移動
         input.focus();
       }
 
@@ -173,7 +185,7 @@
         // 送信者に基づいて適切なクラスを追加
         div.className = `message ${role}`;
         div.innerHTML = `
-          <span class="role">${role === "user" ? "I" : "AI"}</span>
+          <span class="role">${role === "user" ? "Me" : "AI"}</span>
           <span class="text">${text}</span>
           `;
         messages.appendChild(div);
@@ -184,12 +196,15 @@
       // チャット領域を下までスクロールして、最新のメッセージを表示
       function scrollToBottom() {
         const chatArea = document.getElementById("chat-area");
+        // チャット領域のスクロール位置を一番下に設定して、
+        // 最新のメッセージが表示されるようにする
         chatArea.scrollTop = chatArea.scrollHeight;
       }
 
       // チャットをリセットする関数
       async function resetChat() {
         if (!currentPersonaId) return;
+        // サーバーにリセットリクエストを送信して、会話履歴をクリアする
         await fetch("/reset", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
