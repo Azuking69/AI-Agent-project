@@ -221,6 +221,8 @@
             session_id: sessionId,
           }),
         });
+        // チャット領域をクリアして、トークン情報もリセット
+        const messages = document.getElementById("chat-area");
         document.getElementById("token-info").textContent = "";
       }
     </script>
