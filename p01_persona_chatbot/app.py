@@ -1,7 +1,7 @@
 import asyncio
 from flask import Flask, render_template, request, Response, stream_with_context
-from Anthropics import Anthropic
-from loading import load_dotenv
+from anthropic import Anthropic
+from dotenv import load_dotenv
 
 load_dotenv()
 
