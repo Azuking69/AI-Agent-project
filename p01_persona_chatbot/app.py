@@ -105,7 +105,7 @@ def chat():
             # ペルソナを使う場所
             system=persona["system"],
             messages=history,
-            max_tokens=500,
+            max_tokens=1000,
         ) as stream:
             for text in stream.text_stream:
                 response += text
