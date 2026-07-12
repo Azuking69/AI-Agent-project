@@ -10,7 +10,7 @@ app = Flask(__name__)
 client = Anthropic()
 
 # モデル作成
-MODEL = {
+MODELS = {
     "haiku": {
         "id": "claude-haiku-4-5-20251001",
         "name": "Haiku 4.5",
@@ -35,7 +35,7 @@ conversations: dict[str, list] = {}
 # 最初の画面
 @app.route("/", methods=["GET"])
 def index():
-    return render_template("index.html", models=MODEL)
+    return render_template("index.html", models=MODELS)
 
 
 # チャット画面
@@ -85,15 +85,26 @@ def chat():
             history.append({"role": "assistant", "content": full_response})
 
             # 使用トークン数と経過時間を計算して送信
-            elapssed = round(time.perf_counter() - start_time, 2)
+            elapsed = round(time.perf_counter() - start_time, 2)
             usage = stream.get_final_message().usage
-            yield f"data: {json.dumps({'done': True, 'input_tokens': usage.input_tokens, 'output_tokens': usage.output_tokens, 'elapsed': elapssed})}\n\n"
+            yield f"data: {json.dumps({'done': True, 'input_tokens': usage.input_tokens, 'output_tokens': usage.output_tokens, 'elapsed': elapsed})}\n\n"
 
     # ストリーミング応答を返す
     return Response(
         stream_with_context(generate()),
         content_type="text/event-stream",
     )
+
+
+@app.route("/reset", methods=["POST"])
+def reset():
+    data = request.json
+    ssession_id = data.get("session_id", "default")
+    model_key = data.get("model", "")
+    conv_key = f"{session_id}_{model_key}"
+    convaersations.pop(conv_key, None)
+    return {"status": "ok"}
+
 
 # 実行
 if __name__ == "__main__":
