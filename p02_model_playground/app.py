@@ -61,7 +61,7 @@ def chat():
     history.append({"role": "user", "content": user_message})
 
     # モデルIDを取得
-    model_id = MODEL[model_key]["id"]
+    model_id = MODELS[model_key]["id"]
 
 
     # ストリーミング応答を生成するジェネレーター関数
@@ -99,10 +99,10 @@ def chat():
 @app.route("/reset", methods=["POST"])
 def reset():
     data = request.json
-    ssession_id = data.get("session_id", "default")
+    session_id = data.get("session_id", "default")
     model_key = data.get("model", "")
     conv_key = f"{session_id}_{model_key}"
-    convaersations.pop(conv_key, None)
+    conversations.pop(conv_key, None)
     return {"status": "ok"}
 
 
