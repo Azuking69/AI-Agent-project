@@ -24,7 +24,8 @@ def add():
 
     if a is None or b is None:
         return {"error": "정수 쿼리 파라미터 a, b가 모두 필요합니다."}, 400
-        return {"a": a, "b": b, "sum": a + b}
+    
+    return {"a": a, "b": b, "sum": a + b}
     
 @app.route("/echo", methods=['POST'])
 def echo():
@@ -33,7 +34,8 @@ def echo():
 
     if not isinstance(text, str) or not text.strip():
         return {"error": "text 필드(문자열)가 필요합니다."}, 400
-        return {"echo": text, "length": len(text)}
+        
+    return {"echo": text, "length": len(text)}
 
 #  ２）起動
 if __name__ == '__main__':
