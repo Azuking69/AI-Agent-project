@@ -1,0 +1,112 @@
+body {
+  font-family: system-ui, sans-serif;
+  max-width: 640px;
+  margin: 40px auto;
+  padding: 0 16px;
+  color: #5a4048;
+  background: #fffdfd;
+}
+
+h1 {
+  font-size: 1.4rem;
+  color: #c94a68;
+  font-weight: 500;
+}
+
+.hint {
+  color: #a8768a;
+  font-size: 0.9rem;
+}
+
+textarea {
+  width: 100%;
+  height: 140px;
+  margin-top: 8px;
+  box-sizing: border-box;
+  font-family: inherit;
+  padding: 10px;
+  border: 1px solid #f0aebe;
+  border-radius: 10px;
+  background: #fff;
+}
+
+textarea:focus {
+  outline: none;
+  border-color: #de4468;
+}
+
+button {
+  margin-top: 10px;
+  padding: 10px 20px;
+  font-size: 1rem;
+  cursor: pointer;
+  background: #de4468;
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  transition: background 0.2s;
+}
+
+button:hover {
+  background: #c94a68;
+}
+
+button:disabled {
+  background: #f0aebe;
+  cursor: not-allowed;
+}
+
+#result {
+  margin-top: 24px;
+}
+
+.card {
+  background: #fff;
+  border: 1.5px dashed #f0aebe;
+  border-radius: 12px;
+  padding: 16px;
+}
+
+.stars {
+  font-size: 1.6rem;
+  letter-spacing: 2px;
+  color: #ee8fa3;
+}
+
+.badge {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 10px;
+  font-size: 0.85rem;
+  color: #fff;
+}
+
+.badge.positive {
+  background: #6fbf8f;
+}
+.badge.neutral {
+  background: #f2b705;
+}
+.badge.negative {
+  background: #e24b4a;
+}
+
+.summary {
+  margin: 12px 0;
+  color: #8a6c74;
+  font-size: 0.95rem;
+}
+
+.keywords span {
+  display: inline-block;
+  background: #fce3e9;
+  color: #c94a68;
+  border-radius: 6px;
+  padding: 2px 8px;
+  margin: 2px;
+  font-size: 0.85rem;
+}
+
+.error {
+  color: #e24b4a;
+}
