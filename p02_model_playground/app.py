@@ -46,8 +46,8 @@ def chat():
     model_key = data["model"]
     user_message = data["message"]
     # temperatureとmax_tokensを取得（デフォルト値を設定）
-    temperature = float(data.get("temperature", 1.0))
-    max_tokens = int(data.get("max_tokens", 1024))
+    temperature = float(data.get("temperature", 0.7))
+    max_tokens = int(data.get("max_tokens", 512))
     # defaultのsession_idを設定
     session_id = data.get("session_id", "default")
 
@@ -69,7 +69,6 @@ def chat():
         start_time = time.perf_counter()
 
         # AnthropicのストリーミングAPIを使用して応答を生成
-        # strem
         with client.messages.stream(
             model=model_id,
             max_tokens=max_tokens,
@@ -85,7 +84,7 @@ def chat():
             history.append({"role": "assistant", "content": full_response})
 
             # 使用トークン数と経過時間を計算して送信
-            elapsed = round(time.perf_counter() - start_time, 2)
+            elapsed = round(time.perf_counter() - start_time, 3)
             usage = stream.get_final_message().usage
             yield f"data: {json.dumps({'done': True, 'input_tokens': usage.input_tokens, 'output_tokens': usage.output_tokens, 'elapsed': elapsed})}\n\n"
 
@@ -95,7 +94,7 @@ def chat():
         content_type="text/event-stream",
     )
 
-
+# 会話履歴をリセット
 @app.route("/reset", methods=["POST"])
 def reset():
     data = request.json

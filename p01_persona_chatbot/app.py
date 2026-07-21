@@ -8,7 +8,7 @@ load_dotenv()
 
 app = Flask(__name__)
 client = Anthropic()
-MODEL = "claude-haiku-4-5-20251001"
+MODEL = "claude-haiku-4.5"  # デフォルトのモデルを設定
 
 # Make Persona
 # Persona: AIに与える「役割設定」
