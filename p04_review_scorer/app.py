@@ -41,6 +41,20 @@ SYSTEM_PROMPT = """
 - キーワードは星評価の根拠となった表現をレビューから3個前後抜き出す。
 
 """
+# 最大トークン数とレビュー文字数の制限
+MAX_TOKENS = 300
+MAX_REVIEW_CHARS = 2000
+
+
+def evaluate_review(review: str) -> dict:
+    review = review.strip()
+
+    # 入力検証
+    if not review:
+        return {"ok": False, "error": "empty"}
+    if len(review) > MAX_REVIEW_CHARS:
+        return {"ok": False, "error": "too_long"}
+
 
 @app.route("/", methods=["GET"])
 def index():
