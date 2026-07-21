@@ -1,8 +1,8 @@
 from typing import Literal
-from flask import Flask, render_template
+from flask import Flask, render_template, request
 from dotenv import load_dotenv
-from anthropic import Anthropic
-from pydantic import BaseModel
+from anthropic import Anthropic, APIConnectionError, APIStatusError
+from pydantic import BaseModel, ValidationError
 
 
 load_dotenv()
@@ -11,12 +11,10 @@ app = Flask(__name__)
 anthropic = Anthropic()
 
 
-# 出力スキーマ
-class Evaluation(BaseModel):
-    score: Literal[1, 2, 3, 4, 5]
-    sentiment: Literal["positive", "neutral", "negative"]
-    summary: str
-    keywords: list[str]
+# モデルチューニング
+MODEL="claude-haiku-4-5-20251001"
+MAX_TOKENS = 300
+MAX_REVIEW_CHARS = 2000
 
 
 # システムプロンプト
@@ -41,11 +39,17 @@ SYSTEM_PROMPT = """
 - キーワードは星評価の根拠となった表現をレビューから3個前後抜き出す。
 
 """
-# 最大トークン数とレビュー文字数の制限
-MAX_TOKENS = 300
-MAX_REVIEW_CHARS = 2000
 
 
+# 出力スキーマ
+class Evaluation(BaseModel):
+    score: Literal[1, 2, 3, 4, 5]
+    sentiment: Literal["positive", "neutral", "negative"]
+    summary: str
+    keywords: list[str]
+
+
+# レビュー評価関数
 def evaluate_review(review: str) -> dict:
     review = review.strip()
 
@@ -55,7 +59,35 @@ def evaluate_review(review: str) -> dict:
     if len(review) > MAX_REVIEW_CHARS:
         return {"ok": False, "error": "too_long"}
 
+    # LLM呼び出し+出力の防御
+    try:
+        response = anthropic.messages.parse(
+            # LLM呼び出し
+            model=MODEL,
+            max_tokens=MAX_TOKENS,
+            system=SYSTEM_PROMPT,
+            messages=[{"role": "user", "content": review}],
+            output_format=Evaluation,            
+        )
+    # 出力の検証エラーや接続エラーをハンドリング
+    except ValidationError:
+        return {"ok": False, "error": "invalid_output"}
+    except APIConnectionError:
+        return {"ok": False, "error": "connection"}
+    except APIStatusError as e:
+        if e.status_code < 500:
+            raise
+        return {"ok": False, "error": "server_error"}
+    
+    # 出力がトランケートされている場合のエラー処理
+    if response.stop_reason == "max_tokens":
+        return {"ok": False, "error": "truncated"}
+    
+    # 出力を辞書に変換して返す
+    return{"ok": True, "evaluation": response.parsed_output.model_dump()}
 
+
+# APIエンドポイント
 @app.route("/", methods=["GET"])
 def index():
     return render_template("index.html")
