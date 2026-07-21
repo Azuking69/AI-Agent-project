@@ -88,9 +88,22 @@ def evaluate_review(review: str) -> dict:
 
 
 # APIエンドポイント
+# 初期画面
 @app.route("/", methods=["GET"])
 def index():
     return render_template("index.html")
+
+
+# レビュー評価
+@app.route("/evaluate", methods=["POST"])
+def evaluate():
+    data = request.get_json(silent=True) or {}
+    review = data.get("review", "")
+    if not isinstance(review, str):
+        return {"ok": False, "error": "bad_request"}, 400
+
+    result = evaluate_review(review)
+
 
 if __name__ == "__main__":
     app.run(debug=True, port=5000)
