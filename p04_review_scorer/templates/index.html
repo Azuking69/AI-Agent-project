@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>グルメ本音ラボ</title>
+  </head>
+  <body>
+    <h1>グルメ本音ラボ</h1>
+    <p class="hint">
+      レビュー<code>.txt</code>ファイルを開いたり、直接貼り付けて
+      <b>評価する！</b>を押してください。<br />
+      LLMが星・評価・要約・キーワードを検証された構造で出力します。<br />
+      (サンプルレビューは<code>reviews/</code>フォルダーにあります。)
+    </p>
+
+    <input type="file" id="fileInput" accept=".txt" />
+    <textarea
+      id="reviewInput"
+      placeholder="レビューの原文が表示されます。直接、貼り付けてもかまいません。"
+      rows="10"
+      cols="50"
+    ></textarea>
+    <button id="evBtn">評価する！</button>
+
+    <div id="result"></div>
+
+    <script src="{{url_for('static', filename='script.js')}}"></script>
+  </body>
+</html>
