@@ -102,7 +102,7 @@ def evaluate():
     if not isinstance(review, str):
         return {"ok": False, "error": "bad_request"}, 400
 
-    result = evaluate_review(review)
+    return evaluate_review(review)
 
 
 if __name__ == "__main__":
